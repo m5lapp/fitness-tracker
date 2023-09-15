@@ -12,6 +12,9 @@ class Location(models.Model):
     name = models.CharField(max_length=256)
     address = models.CharField(max_length=1024, null=True, blank=True)
 
+    class Meta:
+        ordering = ["name",]
+
     def __str__(self):
         return self.name[:50]
 
@@ -24,6 +27,9 @@ class SessionType(models.Model):
     name = models.CharField(max_length=256, unique=True)
     description = models.TextField(max_length=4096, null=True, blank=True)
 
+    class Meta:
+        ordering = ["name",]
+
     def __str__(self):
         return self.name[:50]
 
@@ -35,6 +41,9 @@ class Session(models.Model):
     session_type = models.ForeignKey(SessionType, on_delete=models.PROTECT)
     location = models.ForeignKey(Location, on_delete=models.PROTECT)
     notes = models.TextField(max_length=65536, null=True, blank=True)
+
+    class Meta:
+        ordering = ["-date", "session_type",]
 
     def __str__(self):
         return f'{self.date.strftime("%Y-%m-%d")}: {self.session_type}'
@@ -51,8 +60,11 @@ class Exercise(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=256, unique=True)
-    description = models.TextField(max_length=4096, null=True, blank=True)
     type = models.CharField(max_length=11, choices=TYPES, default=TYPES[1][0])
+    description = models.TextField(max_length=4096, null=True, blank=True)
+
+    class Meta:
+        ordering = ["name",]
 
     def __str__(self):
         return self.name
@@ -63,7 +75,6 @@ class SessionExercise(models.Model):
     """
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=256)
     session = models.ForeignKey(Session, on_delete=models.PROTECT)
     exercise = models.ForeignKey(Exercise, on_delete=models.PROTECT)
     duration = models.PositiveIntegerField(
@@ -91,6 +102,10 @@ class SessionExercise(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(100)],
         help_text=_('Number of repetitions per set'),
     )
+    notes = models.CharField(max_length=1024, null=True, blank=True)
+
+    class Meta:
+        ordering = ["session", "added",]
 
     def __str__(self):
         duration = distance = weight = sets = reps = ''

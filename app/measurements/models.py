@@ -20,6 +20,9 @@ class MeasurementType(models.Model):
     )
     description = models.CharField(max_length=4096, null=True, blank=True)
 
+    class Meta:
+        ordering = ["name",]
+
     def __str__(self):
         return f'{self.name[:50]} ({self.unit})'
 
@@ -34,6 +37,9 @@ class Measurement(models.Model):
         help_text=_('The value of the measurement taken'),
     )
     notes = models.CharField(max_length=1024, null=True, blank=True)
+
+    class Meta:
+        ordering = ["-date", "type",]
 
     def __str__(self):
         return f'{self.type.name[:50]} - {self.measurement}{self.type.symbol}'
