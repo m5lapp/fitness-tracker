@@ -1,4 +1,4 @@
-FROM docker.io/python:3.11
+FROM docker.io/python:3.11-alpine3.18
 
 ENV ALLOWED_HOSTS "127.0.0.1,localhost"
 ENV DEBUG 0
@@ -9,13 +9,15 @@ WORKDIR /app/
 USER 1000
 
 COPY requirements.txt ./
-RUN apt update && \
-    apt upgrade -y && \
+
+RUN apk update && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev && \
     pip install --upgrade pip && \
     pip install --upgrade setuptools && \
     pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/
 
 EXPOSE 8080
 
