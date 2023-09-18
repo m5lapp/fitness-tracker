@@ -1,0 +1,28 @@
+FROM docker.io/python:3.11-alpine3.18
+
+ARG USER=app
+
+ENV FT_DEBUG=0
+ENV PATH="$PATH:/home/app/.local/bin"
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /home/app/
+
+COPY . .
+
+RUN apk update && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev && \
+    addgroup -S -g 1000 $USER && \
+    adduser -S -u 1000 -g 1000 $USER -G $USER && \
+    chown -R $USER:$USER /home/app/
+
+USER $USER
+
+RUN pip install --upgrade pip && \
+    pip install --upgrade setuptools \
+    pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8080
+
+CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:8080", "fitnesstracker.wsgi"]

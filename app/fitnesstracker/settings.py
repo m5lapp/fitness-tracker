@@ -27,7 +27,7 @@ SECRET_KEY = os.environ['FT_SECRET_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.getenv('FT_DEBUG', '0')))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('FT_ALLOWED_HOSTS', '127.0.0.1,localhost,[::1]').split(',')
 
 
 # Application definition
@@ -79,8 +79,12 @@ WSGI_APPLICATION = 'fitnesstracker.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('FT_DB_ENGINE', 'django.db.backends.sqlite3'),
+        'ENGINE': f"django.db.backends.{os.getenv('FT_DB_ENGINE', 'sqlite3')}",
         'NAME': os.getenv('FT_DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.getenv('FT_DB_USERNAME', default=''),
+        'PASSWORD': os.getenv('FT_DB_PASSWORD', default=''),
+        'HOST': os.getenv('FT_DB_HOST', default=''),
+        'PORT': os.getenv('FT_DB_PORT', default=''),
     }
 }
 

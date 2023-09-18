@@ -1,5 +1,9 @@
 include .envrc
 
+FT_APP_NAME=fitness-tracker
+FT_CONTAINER_IMAGE_TAG=latest
+FT_CONTAINER_IMAGE=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}:${FT_CONTAINER_IMAGE_TAG}
+
 # ============================================================================ #
 # HELPERS
 # ============================================================================ #
@@ -33,6 +37,25 @@ shell:
 run:
 	python3 app/manage.py runserver ${port}
 
+## run/container: Enter the fitness-tracker container image
+.PHONY: run/container
+run/container:
+	@echo "Entering the fitness-tracker container"
+	${CONTAINER_CMD} container run \
+		--rm -it \
+		--name fitness-tracker \
+		-e FT_DEBUG=${FT_DEBUG} \
+		-e FT_SECRET_KEY=${FT_SECRET_KEY} \
+		-e FT_DB_ENGINE=${FT_DB_ENGINE} \
+		-e FT_DB_HOST=${FT_DB_HOST} \
+		-e FT_DB_PORT=${FT_DB_PORT} \
+		-e FT_DB_USERNAME=${FT_DB_USERNAME} \
+		-e FT_DB_PASSWORD=${FT_DB_PASSWORD} \
+		-e FT_DB_NAME=${FT_DB_NAME} \
+		-v ./app/:/home/app/:Z \
+		${FT_CONTAINER_IMAGE} \
+		sh
+
 # ============================================================================ #
 # DATABASE
 # ============================================================================ #
@@ -40,17 +63,22 @@ run:
 ## db/psql: Connect to the database using psql
 .PHONY: db/psql
 db/psql:
-	psql ${FT_DB_DSN}
+	@PGPASSWORD=${FT_DB_PASSWORD} \
+	psql \
+		--host ${FT_DB_HOST} \
+		--port ${FT_DB_PORT} \
+		--dbname ${FT_DB_NAME} \
+		--username ${FT_DB_USERNAME}
 
 ## db/sqlite: Connect to the database using sqlite
 .PHONY: db/sqlite
 db/sqlite:
-	sqlite3 ${FT_DB_DSN}
+	sqlite3 app/${FT_DB_NAME}
 
-## db/makemigrations: Create a new migration based on any recent model changes
+## db/makemigrations: Create new migrations based on any recent model changes
 .PHONY: db/makemigrations app=$1
 db/makemigrations:
-	@echo "Making a new database migration..."
+	@echo "Making new database migrations..."
 	python3 app/manage.py makemigrations ${app}
 
 ## db/migrate: Apply the latest database migrations
@@ -63,8 +91,18 @@ db/migrate:
 # BUILD
 # ============================================================================ #
 
-## build/api: Build the cmd/api application
-.PHONY: build/app
-build/app:
-	@echo "Building app from Dockerfile"
-	$(CONTAINER_CMD) build -t docker.io/mijoap/fitness-tracker:latest .
+## build/login: Log in to the container registry with an access token
+.PHONY: build/login
+build/login:
+	@echo "Logging in to the container registry with access token"
+	@${CONTAINER_CMD} login \
+		--username ${CONTAINER_REGISTRY_USER} \
+		--password ${CONTAINER_REGISTRY_ACCESS_TOKEN}
+
+## build/container: Build the container image and push it to the registry
+.PHONY: build/container
+build/container:
+	@echo "Building app from Containerfile"
+	${CONTAINER_CMD} image build -t ${FT_CONTAINER_IMAGE} app/
+	@echo "Pushing built container image to ${FT_CONTAINER_IMAGE}"
+	${CONTAINER_CMD} image push ${FT_CONTAINER_IMAGE}
