@@ -89,8 +89,8 @@ class SessionExercise(models.Model):
     )
     weight = models.FloatField(
         null=True, blank=True,
-        validators=[MinValueValidator(1.0), MaxValueValidator(1000.0)],
-        help_text=_('Weight used in kg'),
+        validators=[MinValueValidator(-1000.0), MaxValueValidator(1000.0)],
+        help_text=_('Weight used in kg, negative implies weighted assistance'),
     )
     sets = models.PositiveIntegerField(
         null=True, blank=True,
@@ -99,7 +99,7 @@ class SessionExercise(models.Model):
     )
     reps = models.PositiveIntegerField(
         null=True, blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        validators=[MinValueValidator(1), MaxValueValidator(1_000_000)],
         help_text=_('Number of repetitions per set'),
     )
     notes = models.CharField(max_length=1024, null=True, blank=True)
@@ -115,7 +115,7 @@ class SessionExercise(models.Model):
         if self.distance:
             distance = f'{self.distance}m, '
         if self.weight:
-            weight = f'{self.weight}kg, '
+            weight = f'{self.weight}kg '
         if self.sets:
             sets = f'× {self.sets} sets '
         if self.reps:
