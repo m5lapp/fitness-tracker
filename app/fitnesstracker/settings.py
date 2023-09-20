@@ -29,6 +29,10 @@ DEBUG = bool(int(os.getenv('FT_DEBUG', '0')))
 
 ALLOWED_HOSTS = os.getenv('FT_ALLOWED_HOSTS', '127.0.0.1,localhost,[::1]').split(',')
 
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'FT_CSRF_TRUSTED_ORIGINS',
+    ','.join([f'http://{host}' for host in ALLOWED_HOSTS]),
+).split(',')
 
 # Application definition
 
@@ -123,6 +127,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+STATIC_ROOT = Path(BASE_DIR).parent / 'proxy/static/'
 STATIC_URL = 'static/'
 
 # Default primary key field type
