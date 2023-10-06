@@ -11,6 +11,7 @@ WORKDIR /home/app/
 COPY . .
 
 RUN apk update && \
+    apk upgrade && \
     apk add postgresql-libs && \
     apk add --virtual .build-deps gcc musl-dev postgresql-dev && \
     addgroup -S -g 1000 $USER && \

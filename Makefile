@@ -1,8 +1,9 @@
 include .envrc
 
 FT_APP_NAME=fitness-tracker
-FT_CONTAINER_IMAGE_TAG=latest
-FT_CONTAINER_IMAGE=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}:${FT_CONTAINER_IMAGE_TAG}
+FT_CONTAINER_IMAGE_TAG=0.1.9
+FT_CONTAINER_IMAGE_APP=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}:${FT_CONTAINER_IMAGE_TAG}
+FT_CONTAINER_IMAGE_PROXY=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}-proxy:${FT_CONTAINER_IMAGE_TAG}
 
 # ============================================================================ #
 # HELPERS
@@ -52,7 +53,6 @@ run/container:
 		-e FT_DB_USERNAME=${FT_DB_USERNAME} \
 		-e FT_DB_PASSWORD=${FT_DB_PASSWORD} \
 		-e FT_DB_NAME=${FT_DB_NAME} \
-		-v ./app/:/home/app/:Z \
 		${FT_CONTAINER_IMAGE} \
 		sh
 
@@ -91,18 +91,34 @@ db/migrate:
 # BUILD
 # ============================================================================ #
 
+## collectstatic: Copy all static files to the proxy directory
+.PHONY: collectstatic
+collectstatic:
+	python3 app/manage.py collectstatic
+
 ## build/login: Log in to the container registry with an access token
 .PHONY: build/login
 build/login:
 	@echo "Logging in to the container registry with access token"
-	@${CONTAINER_CMD} login \
+	@${CONTAINER_CMD} login ${CONTAINER_REGISTRY} \
 		--username ${CONTAINER_REGISTRY_USER} \
 		--password ${CONTAINER_REGISTRY_ACCESS_TOKEN}
 
-## build/container: Build the container image and push it to the registry
-.PHONY: build/container
-build/container:
+## build/container/app: Build the application container image and push it to the registry
+.PHONY: build/container/app
+build/container/app:
 	@echo "Building app from Containerfile"
-	${CONTAINER_CMD} image build -t ${FT_CONTAINER_IMAGE} app/
-	@echo "Pushing built container image to ${FT_CONTAINER_IMAGE}"
-	${CONTAINER_CMD} image push ${FT_CONTAINER_IMAGE}
+	${CONTAINER_CMD} image build -t ${FT_CONTAINER_IMAGE_APP} app/
+	@echo "Pushing built container image to ${FT_CONTAINER_IMAGE_APP}"
+	${CONTAINER_CMD} image push ${FT_CONTAINER_IMAGE_APP}
+
+## build/container/proxy: Build the proxy container image and push it to the registry
+.PHONY: build/container/proxy
+build/container/proxy:
+	@echo "Building proxy from Containerfile"
+	${CONTAINER_CMD} image build \
+		--build-arg NGINX_SERVER_NAME=${NGINX_SERVER_NAME} \
+		-t ${FT_CONTAINER_IMAGE_PROXY} \
+		proxy/
+	@echo "Pushing built container image to ${FT_CONTAINER_IMAGE_PROXY}"
+	${CONTAINER_CMD} image push ${FT_CONTAINER_IMAGE_PROXY}

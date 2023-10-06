@@ -1,0 +1,10 @@
+FROM docker.io/nginx:1.25-alpine
+
+RUN apk update && \
+    apk upgrade && \
+    mkdir -p /usr/share/nginx/static/
+
+COPY ./nginx.template.conf /etc/nginx/nginx.conf
+COPY ./static/ /usr/share/nginx/static/
+
+EXPOSE 8080
