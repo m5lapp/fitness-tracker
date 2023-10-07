@@ -5,7 +5,6 @@ metadata:
   labels:
     app: fitness-tracker
     component: ingress
-    domain: fitness-tracker.m5l.app
     technology: traefik
   name: fitness-tracker-ingress
   namespace: fitness-tracker
