@@ -1,7 +1,7 @@
 include .envrc
 
 FT_APP_NAME=fitness-tracker
-FT_CONTAINER_IMAGE_TAG=0.1.9
+FT_CONTAINER_IMAGE_TAG=1.0.0
 FT_CONTAINER_IMAGE_APP=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}:${FT_CONTAINER_IMAGE_TAG}
 FT_CONTAINER_IMAGE_PROXY=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}-proxy:${FT_CONTAINER_IMAGE_TAG}
 
@@ -122,3 +122,21 @@ build/container/proxy:
 		proxy/
 	@echo "Pushing built container image to ${FT_CONTAINER_IMAGE_PROXY}"
 	${CONTAINER_CMD} image push ${FT_CONTAINER_IMAGE_PROXY}
+
+# ============================================================================ #
+# DEPLOY
+# ============================================================================ #
+
+## deploy: Deploy the application to the given Kubernetes cluster
+.PHONY: deploy env=$1
+deploy:
+	@echo "Generating YAML patches from template files"
+	sed "s|FT_CONTAINER_IMAGE_APP|${FT_CONTAINER_IMAGE_APP}|g" kustomize/overlays/${env}/patch_app.yaml.tmpl > kustomize/overlays/${env}/patch_app.yaml
+	sed "s|NGINX_SERVER_NAME|${NGINX_SERVER_NAME}|g" kustomize/overlays/${env}/patch_ingress.yaml.tmpl > kustomize/overlays/${env}/patch_ingress.yaml
+	sed "s|FT_CONTAINER_IMAGE_PROXY|${FT_CONTAINER_IMAGE_PROXY}|g" kustomize/overlays/${env}/patch_proxy.yaml.tmpl > kustomize/overlays/${env}/patch_proxy.yaml
+	@echo "Deploying to Kubernetes cluster"
+	kubectl apply --kustomize kustomize/overlays/${env}/
+	@echo "Cleaning up YAML patches"
+	@rm kustomize/overlays/${env}/patch_app.yaml
+	@rm kustomize/overlays/${env}/patch_ingress.yaml
+	@rm kustomize/overlays/${env}/patch_proxy.yaml

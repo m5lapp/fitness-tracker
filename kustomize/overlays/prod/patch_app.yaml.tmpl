@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fitness-tracker
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: init-migrate
+        image: FT_CONTAINER_IMAGE_APP
+      containers:
+      - name: fitness-tracker
+        image: FT_CONTAINER_IMAGE_APP

@@ -1,0 +1,19 @@
+# https://sysadmins.co.za/https-using-letsencrypt-and-traefik-with-k3s/
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app: fitness-tracker
+    component: ingress
+    domain: fitness-tracker.m5l.app
+    technology: traefik
+  name: fitness-tracker-ingress
+  namespace: fitness-tracker
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/redirect-entry-point: https
+spec:
+  ingressClassName: traefik
+  # The following two fields are overwritten by the Kustomization.
+  rules: []
+  tls: []
