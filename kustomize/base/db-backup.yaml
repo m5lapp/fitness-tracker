@@ -18,7 +18,7 @@ metadata:
   name: database-backup-data
   namespace: fitness-tracker
 spec:
-  schedule: "0 3 * * *"
+  schedule: "2 00 * * *"
   jobTemplate:
     metadata:
       labels:
@@ -36,7 +36,7 @@ spec:
             - /bin/sh
             args:
             - -c
-            - | 
+            - |
               ls -l /var/lib/postgresql/backups/ && \
               pg_dump -h ${PGHOST} \
                       -p ${PGPORT} \
@@ -49,7 +49,8 @@ spec:
                    -name "*.sql" \
                    -mtime +${BACKUP_RETENTION_DAYS} \
                    -delete && \
-              ls -l /var/lib/postgresql/backups/
+              ls -l /var/lib/postgresql/backups/ && \
+              CODE=$?; wget --post-data '' 127.0.0.1:4191/shutdown; exit $CODE
             env:
             - name: BACKUP_RETENTION_DAYS
               value: "180"
