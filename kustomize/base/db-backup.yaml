@@ -18,7 +18,7 @@ metadata:
   name: database-backup-data
   namespace: fitness-tracker
 spec:
-  schedule: "2 00 * * *"
+  schedule: "0 2 * * *"
   jobTemplate:
     metadata:
       labels:
