@@ -127,16 +127,9 @@ build/container/proxy:
 # DEPLOY
 # ============================================================================ #
 
-## deploy: Deploy the application to the given Kubernetes cluster
-.PHONY: deploy env=$1
+## deploy: Deploy the application to Kubernetes with Helm
+.PHONY: deploy
 deploy:
-	@echo "Generating YAML patches from template files"
-	sed "s|FT_CONTAINER_IMAGE_APP|${FT_CONTAINER_IMAGE_APP}|g" kustomize/overlays/${env}/patch_app.yaml.tmpl > kustomize/overlays/${env}/patch_app.yaml
-	sed "s|NGINX_SERVER_NAME|${NGINX_SERVER_NAME}|g" kustomize/overlays/${env}/patch_ingress.yaml.tmpl > kustomize/overlays/${env}/patch_ingress.yaml
-	sed "s|FT_CONTAINER_IMAGE_PROXY|${FT_CONTAINER_IMAGE_PROXY}|g" kustomize/overlays/${env}/patch_proxy.yaml.tmpl > kustomize/overlays/${env}/patch_proxy.yaml
-	@echo "Deploying to Kubernetes cluster"
-	kubectl apply --kustomize kustomize/overlays/${env}/
-	@echo "Cleaning up YAML patches"
-	@rm kustomize/overlays/${env}/patch_app.yaml
-	@rm kustomize/overlays/${env}/patch_ingress.yaml
-	@rm kustomize/overlays/${env}/patch_proxy.yaml
+	helm upgrade -i fitness-tracker ./helm/fitness-tracker/ \
+       -f helm/custom-values.yaml \
+       --wait

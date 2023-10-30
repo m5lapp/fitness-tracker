@@ -57,7 +57,7 @@ A Helm chart is supplied in the `helm/` directory for deployment to a Kubernetes
    EOF
    ```
 1. Create a custom values file to override any of the values in the `helm/fitness-tracker/values.yaml` file. The path `helm/custom-values.yaml` is gitignored for this purpose if you wish to use it.
-1. Install the Helm chart:
+1. Install the Helm chart; there is a `make deploy` Make target available, otherwise the command is:
    ```sh
    helm upgrade -i fitness-tracker ./helm/fitness-tracker/ \
        -f helm/custom-values.yaml \
