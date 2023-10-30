@@ -1,0 +1,79 @@
+{{ if and .Values.ingress.active .Values.ingress.mtls.active -}}
+# Create a certificate for the intermediate CA.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-cert
+  namespace: {{ .Values.ingress.mtls.trustNamespace }}
+spec:
+  isCA: true
+  commonName: {{ .Values.ingress.fqdn }}
+  secretName: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-cert
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: {{ .Values.ingress.mtls.rootCA.issuer }}
+    kind: Issuer
+    group: cert-manager.io
+
+---
+
+# Create an intermediate CA issuer using the intermediate CA certificate.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-issuer
+  namespace: {{ .Values.ingress.mtls.trustNamespace }}
+spec:
+  ca:
+    secretName: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-cert
+
+---
+
+# Create a CA certificate bundle and deploy it to the fitness-tracker namespace.
+apiVersion: trust.cert-manager.io/v1alpha1
+kind: Bundle
+metadata:
+  name: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-certs-bundle
+spec:
+  sources:
+  - useDefaultCAs: false
+  - secret:
+      name: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-cert
+      key: tls.crt
+  - secret:
+      name: {{ .Values.ingress.mtls.rootCA.certificateSecret }}
+      key: tls.crt
+  target:
+    secret:
+      key: ca.crt
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: {{ .Values.namespace }}
+
+---
+
+# Create a certificate for the client using the intermediate CA.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.ingress.fqdn | replace "." "-" }}-{{ .Values.ingress.mtls.clientCert.userName }}-client-cert
+  namespace: {{ .Values.ingress.mtls.trustNamespace }}
+spec:
+  isCA: false
+  commonName: {{ .Values.ingress.fqdn }}
+  dnsNames:
+  - {{ .Values.ingress.fqdn }}
+  emailAddresses:
+  - {{ .Values.ingress.mtls.clientCert.userName }}@{{ .Values.ingress.fqdn }}
+  duration: {{ .Values.ingress.mtls.clientCert.duration }}
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: {{ .Values.ingress.fqdn | replace "." "-" }}-{{ .Values.ingress.mtls.clientCert.userName }}-client-cert
+  issuerRef:
+    name: {{ .Values.ingress.fqdn | replace "." "-" }}-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+{{- end }}

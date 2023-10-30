@@ -1,0 +1,132 @@
+{{ if and .Values.dbBackup.active (eq .Values.app.database.engine "postgresql") -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Chart.Name }}-database-backups
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.dbBackup.volume.capacity }}
+  storageClassName: {{ .Values.dbBackup.volume.storageClass }}
+
+---
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup-data
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: {{ .Values.dbBackup.schedule}}
+  jobTemplate:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        component: database
+        technology: postgres
+        job: database-backup-data
+    spec:
+      template:
+        spec:
+          containers:
+          - name: database-backup-data
+            image: docker.io/postgres:14-alpine
+            command:
+            - /bin/sh
+            args:
+            - -c
+            - |
+              ls -l /var/lib/postgresql/backups/ && \
+              pg_dump -h ${PGHOST} \
+                      -p ${PGPORT} \
+                      -U ${PGUSER} \
+                      -d ${PGDATABASE} \
+                      > /var/lib/postgresql/backups/$(date +"%Y%m%d%H%M%S").sql && \
+              echo "Removing backups older than ${BACKUP_RETENTION_DAYS} days" && \
+              find /var/lib/postgresql/backups/ \
+                   -type f \
+                   -name "*.sql" \
+                   -mtime +${BACKUP_RETENTION_DAYS} \
+                   -delete && \
+              ls -l /var/lib/postgresql/backups/
+              {{- if .Values.serviceMesh.linkerd.active }} && \
+              CODE=$?; wget --post-data '' 127.0.0.1:4191/shutdown; exit $CODE
+              {{- end }}
+            env:
+            - name: BACKUP_RETENTION_DAYS
+              value: {{ quote .Values.dbBackup.retentionDays }}
+            - name: PGHOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: FT_DB_HOST
+            - name: PGPORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: FT_DB_PORT
+            - name: PGDATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: FT_DB_NAME
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: FT_DB_USERNAME
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: FT_DB_PASSWORD
+            {{- with .Values.app.resources }}
+            resources:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            volumeMounts:
+            - name: database-backups
+              mountPath: /var/lib/postgresql/backups/
+          restartPolicy: OnFailure
+          serviceAccountName: {{ .Chart.Name }}
+          volumes:
+          - name: database-backups
+            persistentVolumeClaim:
+              claimName: {{ .Chart.Name }}-database-backups
+{{- end }}
+
+# ---
+
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: database-backup-data-debug
+#   namespace: fitness-tracker
+#   labels:
+#     app: fitness-tracker
+#     component: database
+#     technology: postgres
+#     job: database-backup-data
+# spec:
+#   containers:
+#   - name: database-backup-data-debug
+#     image: docker.io/postgres:14-alpine
+#     command:
+#     - sleep
+#     args:
+#     - "3600"
+#     resources:
+#       limits:
+#         cpu: "128m"
+#         memory: "32Mi"
+#     volumeMounts:
+#     - name: database-backups
+#       mountPath: /var/lib/postgresql/backups/
+#   restartPolicy: Never
+#   serviceAccountName: fitness-tracker
+#   volumes:
+#   - name: database-backups
+#     persistentVolumeClaim:
+#       claimName: ft-database-backups

@@ -41,33 +41,31 @@ You can then perform various tasks with the targets in the Makefile such as runn
     1. `make build/container/app`
 
 ### Deploy to Kubernetes
-The YAML provided in the `kustomize/` directory can be used to deploy the application to a Kubernetes cluster as follows. If you want to deploy to an environment other than production, duplicate the `kustomize/overlays/prod/` directory and give it an appropriate name. You can then follow the steps below in that directory rather than the `prod/` one.
+A Helm chart is supplied in the `helm/` directory for deployment to a Kubernetes cluster. There are a number of optional infrastructure features that can be activated such as ingress and client certificates (mTLS) [using Traefik](https://github.com/m5lapp/k3s-fcos-oci/tree/main/docs) and automated database backups if Postgresql is used as the database.
 
-1. Create the two files listed below in the `prod/` directory with appropriate values; do not surround the values in quotes of any kind
-1. Generate and deploy the Kubernetes manifests by running `make deploy env=prod` where `prod` is the name of the environment directory in the `kustomize/overlays/` directory
-1. If the application is running for the very first time, you will need to create a super user to log in as by running: `kubectl exec -it -n fitness-tracker -c fitness-tracker deployment/fitness-tracker -- python manage.py createsuperuser`
-
-#### kustomize/overlays/prod/data_configmap.properties
-```bash
-FT_ALLOWED_HOSTS=fitness-tracker,localhost
-FT_CSRF_TRUSTED_ORIGINS=https://fitness-tracker.example.com,http://localhost
-FT_DB_ENGINE=postgresql
-FT_DB_PORT=5432
-FT_DEBUG=0
-```
-#### kustomize/overlays/prod/data_secret.properties
-```bash
-FT_DB_HOST=db.example.com
-FT_DB_NAME=fitness_tracker
-FT_DB_PASSWORD=Sup3rS3cr3tP455w0rd
-FT_DB_USERNAME=fitness_tracker
-FT_SECRET_KEY=abcdefghijklmnopqrstuvwxyz0123456789
-```
+1. Create the namespace, remove the annotation if you do not wish for th Pods within it to be meshed by Linkerd:
+   ```bash
+   cat << EOF | kubectl apply -f -
+   apiVersion: v1
+   kind: Namespace
+   metadata:
+   name: fitness-tracker
+   annotations:
+     linkerd.io/inject: enabled
+   labels:
+     app: fitness-tracker
+   EOF
+   ```
+1. Create a custom values file to override any of the values in the `helm/fitness-tracker/values.yaml` file. The path `helm/custom-values.yaml` is gitignored for this purpose if you wish to use it.
+1. Install the Helm chart:
+   ```sh
+   helm upgrade -i fitness-tracker ./helm/fitness-tracker/ \
+       -f helm/custom-values.yaml \
+       --wait
+   ```
 
 ## Database Backup and Restoration
-There is a Kubernetes CronJob that will automatically do a pg_dump of the database every day.
-
-A backup can then be restored as follows:
+There is a Kubernetes CronJob that will automatically do a pg_dump of the database at the given schedule. A backup can then be restored as follows:
 
 ```bash
 # Create a database to restore into.
@@ -84,4 +82,4 @@ psql
 ALTER SEQUENCE user_id_seq RESTART 3;
 ```
 
-Alternatively, use pg_restore if the dump file is not a plain-text script.
+Alternatively, use `pg_restore` if the dump file is not a plain-text script.
