@@ -1,7 +1,7 @@
 include .envrc
 
 FT_APP_NAME=fitness-tracker
-FT_CONTAINER_IMAGE_TAG=1.0.0
+FT_CONTAINER_IMAGE_TAG=1.0.1
 FT_CONTAINER_IMAGE_APP=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}:${FT_CONTAINER_IMAGE_TAG}
 FT_CONTAINER_IMAGE_PROXY=${CONTAINER_REGISTRY}/${CONTAINER_REGISTRY_USER}/${FT_APP_NAME}-proxy:${FT_CONTAINER_IMAGE_TAG}
 
@@ -73,7 +73,7 @@ db/psql:
 ## db/sqlite: Connect to the database using sqlite
 .PHONY: db/sqlite
 db/sqlite:
-	sqlite3 app/${FT_DB_NAME}
+	sqlite3 ${FT_DB_NAME}
 
 ## db/makemigrations: Create new migrations based on any recent model changes
 .PHONY: db/makemigrations app=$1

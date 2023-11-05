@@ -38,6 +38,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv(
 
 INSTALLED_APPS = [
     'measurements.apps.MeasurementsConfig',
+    'nutrition.apps.NutritionConfig',
     'workouts.apps.WorkoutsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
