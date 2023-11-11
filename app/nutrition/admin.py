@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import FoodCategory, FoodItem, Meal, MealItem, TargetIntake
+from .models import FoodCategory, FoodItem, Journal, JournalItem, TargetIntake
 
 class FoodCategoryAdmin(admin.ModelAdmin):
     ordering = ["name",]
@@ -17,23 +17,22 @@ class FoodItemAdmin(admin.ModelAdmin):
         "-favourite", "category__name", "subcategory", "brand", "range", "name",
     ]
 
-class MealItemInline(admin.TabularInline):
-    model = MealItem
+class JournalItemInline(admin.TabularInline):
+    model = JournalItem
     extra = 2
 
-class MealAdmin(admin.ModelAdmin):
-    inlines = [MealItemInline,]
-    list_display = ["date", "type",]
-    list_filter = ["date", "type",]
+class JournalAdmin(admin.ModelAdmin):
+    inlines = [JournalItemInline,]
+    list_filter = ["date",]
     ordering = ["-date",]
 
 class TargetIntakeAdmin(admin.ModelAdmin):
     list_display = [
-        "name", "energy", "fat", "protein",
+        "name", "energy", "fat", "protein", "active",
     ]
 
 admin.site.register(FoodCategory, FoodCategoryAdmin)
 admin.site.register(FoodItem, FoodItemAdmin)
-admin.site.register(Meal, MealAdmin)
-admin.site.register(MealItem)
+admin.site.register(Journal, JournalAdmin)
+admin.site.register(JournalItem)
 admin.site.register(TargetIntake, TargetIntakeAdmin)
