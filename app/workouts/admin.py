@@ -21,7 +21,11 @@ class ExerciseAdmin(admin.ModelAdmin):
     search_fields = ["name",]
 
 class SessionExerciseAdmin(admin.ModelAdmin):
-    list_display = ["session", "exercise", "duration", "distance", "weight", "sets", "reps",]
+    list_display = [
+        "session", "exercise",
+        "duration", "distance", "calories",
+        "weight", "sets", "reps",
+    ]
     list_filter = ["session__date", "exercise",]
 
 admin.site.register(Location, LocationAdmin)
