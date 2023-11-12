@@ -19,7 +19,7 @@ class FoodItemAdmin(admin.ModelAdmin):
 
 class JournalItemInline(admin.TabularInline):
     model = JournalItem
-    extra = 2
+    extra = 1
 
 class JournalAdmin(admin.ModelAdmin):
     inlines = [JournalItemInline,]
