@@ -85,9 +85,10 @@ class FoodItem(models.Model):
     reference unit quantity, such as 100g, 100ml, 1 item, 1 biscuit etc.
     """
     UNITS = (
-        ('g',     'grams'),
-        ('units', 'items/pieces'),
-        ('ml',    'millilitres'),
+        ('g',        'grams'),
+        ('units',    'items/pieces'),
+        ('ml',       'millilitres'),
+        ('servings', 'servings/portions'),
     )
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -280,7 +281,6 @@ class JournalItem(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     journal = models.ForeignKey(Journal, on_delete=models.PROTECT)
-    # type = models.CharField(max_length=10, choices=TYPES, default=TYPES[3][0])
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='Dinner')
     food_item = models.ForeignKey(FoodItem, on_delete=models.PROTECT)
     quantity = models.FloatField(
