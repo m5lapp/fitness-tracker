@@ -87,6 +87,11 @@ class SessionExercise(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(1_000_000)],
         help_text=_('Distance covered in metres'),
     )
+    calories = models.PositiveIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(10_000)],
+        help_text=_('Calories (kcal) burned'),
+    )
     weight = models.FloatField(
         null=True, blank=True,
         validators=[MinValueValidator(-1000.0), MaxValueValidator(1000.0)],
@@ -108,12 +113,14 @@ class SessionExercise(models.Model):
         ordering = ["session", "added",]
 
     def __str__(self):
-        duration = distance = weight = sets = reps = ''
+        duration = distance = calories = weight = sets = reps = ''
 
         if self.duration:
             duration = f'{self.duration}s, '
         if self.distance:
             distance = f'{self.distance}m, '
+        if self.calories:
+            calories = f'{self.calories}kcal, '
         if self.weight:
             weight = f'{self.weight}kg '
         if self.sets:
@@ -121,5 +128,8 @@ class SessionExercise(models.Model):
         if self.reps:
             reps = f'× {self.reps} reps'
 
-        s = f'{self.exercise.name[:20]}: {duration}{distance}{weight}{sets}{reps}'
+        s = (
+            f'{self.exercise.name[:20]}: '
+            f'{duration}{distance}{calories}{weight}{sets}{reps}'
+        )
         return s.rstrip(', ')
