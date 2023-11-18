@@ -243,7 +243,7 @@ class Journal(models.Model):
 
         n = self.nutrition()
         print(self.date,    within_deviation(n['energy'], target.energy))
-        print(self.date,   within_deviation(n['fat'], target.fat))
+        print(self.date,    within_deviation(n['fat'], target.fat))
         print(self.date,    within_deviation(n['saturates'], target.saturates))
         print(self.date,    within_deviation(n['carbohydrates'], target.carbohydrates))
         print(self.date,    within_deviation(n['sugars'], target.sugars))
@@ -282,12 +282,12 @@ class JournalItem(models.Model):
     updated = models.DateTimeField(auto_now=True)
     journal = models.ForeignKey(Journal, on_delete=models.PROTECT)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='Dinner')
-    food_item = models.ForeignKey(FoodItem, on_delete=models.PROTECT)
     quantity = models.FloatField(
         default=1.0,
         validators=[MinValueValidator(0.0), MaxValueValidator(10000.0)],
         help_text=_('Quantity of the food item that was consumed'),
     )
+    food_item = models.ForeignKey(FoodItem, on_delete=models.PROTECT)
 
     class Meta:
         ordering = ["added",]

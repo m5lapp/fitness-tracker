@@ -24,9 +24,9 @@ app:
   resources:
     limits:
       # cpu: "500m"
-      memory: "384Mi"
-    requests:
       memory: "512Mi"
+    requests:
+      memory: "384Mi"
   secretKey: django-insecure-abcdefghijklmnopqrstuvwxyz0123456789!"£$%^&*()"
   terminationGracePeriodSeconds: 20
 
