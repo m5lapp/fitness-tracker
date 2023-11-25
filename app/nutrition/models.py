@@ -189,6 +189,10 @@ class Journal(models.Model):
     drink consumed over a single day.
     """
     date = models.DateField(default=timezone.now, unique=True)
+    incomplete_data = models.BooleanField(
+        default=False,
+        help_text=_('The data for this journal is not complete'),
+    )
     notes = models.TextField(max_length=4096, null=True, blank=True)
     items = models.ManyToManyField(FoodItem, through="JournalItem")
 
