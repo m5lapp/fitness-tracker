@@ -37,7 +37,7 @@ spec:
         image: "{{ .Values.proxy.image.repository }}:{{ .Values.proxy.image.tag | default .Chart.AppVersion }}"
         ports:
         - containerPort: {{ .Values.proxy.ports.internal }}
-        {{- with .Values.app.resources }}
+        {{- with .Values.proxy.resources }}
         resources:
           {{- toYaml . | nindent 10 }}
         {{- end }}

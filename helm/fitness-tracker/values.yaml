@@ -41,6 +41,9 @@ proxy:
     limits:
       cpu: "200m"
       memory: "64Mi"
+    requests:
+      cpu: "200m"
+      memory: "64Mi"
 
 ingress:
   active: true
