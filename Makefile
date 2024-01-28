@@ -23,20 +23,41 @@ confirm:
 # DEVELOPMENT
 # ============================================================================ #
 
+## venv/activate: Activate (and create if required) a Python virtual environment
+.PHONY: venv/activate
+venv/activate:
+	. .envrc
+	test -d venv || python3 -m venv venv
+	. venv/bin/activate; \
+		pip install -r app/requirements.txt
+
+## venv/deactivate: Exit the Python virtual environment if active
+.PHONY: venv/deactivate
+venv/deactivate:
+	deactivate 2>/dev/null || true
+
+## venv/clean: Completely remove the Python virtual environment
+.PHONY: venv/clean
+venv/clean: venv/deactivate
+	rm -rf venv/
+
 ## manage command=$1: Run the Django manage.py script with the given command
 .PHONY: manage command=$1
 manage:
-	python3 app/manage.py ${command}
+	. venv/bin/activate; \
+		python3 app/manage.py ${command}
 
 ## shell: Run the Django interactive command shell
 .PHONY: shell
 shell:
-	python3 app/manage.py shell
+	. venv/bin/activate; \
+		python3 app/manage.py shell
 
 ## run: Run the Django development server
 .PHONY: run port=$1
 run:
-	python3 app/manage.py runserver ${port}
+	. venv/bin/activate; \
+		python3 app/manage.py runserver ${port}
 
 ## run/container: Enter the fitness-tracker container image
 .PHONY: run/container
@@ -78,14 +99,16 @@ db/sqlite:
 ## db/makemigrations: Create new migrations based on any recent model changes
 .PHONY: db/makemigrations app=$1
 db/makemigrations:
-	@echo "Making new database migrations..."
-	python3 app/manage.py makemigrations ${app}
+	. venv/bin/activate; \
+		echo "Making new database migrations..."; \
+		python3 app/manage.py makemigrations ${app}
 
 ## db/migrate: Apply the latest database migrations
 .PHONY: db/migrate
 db/migrate:
-	@echo "Applying latest database migrations..."
-	python3 app/manage.py migrate
+	. venv/bin/activate; \
+		echo "Applying latest database migrations..."; \
+		python3 app/manage.py migrate
 
 # ============================================================================ #
 # BUILD
@@ -94,7 +117,8 @@ db/migrate:
 ## collectstatic: Copy all static files to the proxy directory
 .PHONY: collectstatic
 collectstatic:
-	python3 app/manage.py collectstatic
+	. venv/bin/activate; \
+		python3 app/manage.py collectstatic
 
 ## build/login: Log in to the container registry with an access token
 .PHONY: build/login

@@ -43,7 +43,7 @@ You can then perform various tasks with the targets in the Makefile such as runn
 ### Deploy to Kubernetes
 A Helm chart is supplied in the `helm/` directory for deployment to a Kubernetes cluster. There are a number of optional infrastructure features that can be activated such as ingress and client certificates (mTLS) [using Traefik](https://github.com/m5lapp/k3s-fcos-oci/tree/main/docs) and automated database backups if Postgresql is used as the database.
 
-1. Create the namespace, remove the annotation if you do not wish for th Pods within it to be meshed by Linkerd:
+1. Create the namespace, remove the annotation if you do not wish for the Pods within it to be meshed by Linkerd:
    ```bash
    cat << EOF | kubectl apply -f -
    apiVersion: v1
