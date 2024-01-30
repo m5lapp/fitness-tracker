@@ -201,17 +201,8 @@ class Journal(models.Model):
 
     def __str__(self):
         n = self.nutrition()
-        target = TargetIntake.current()
-        target_met_emoji = ''
-
-        if target:
-            if self.target_intake_met(target):
-                target_met_emoji = '🟢 '
-            else:
-                target_met_emoji = '🔴 '
-
         return (
-            f'{self.date} | {target_met_emoji}'
+            f'{self.date} | '
             f'{n["energy"]:.0f}kcal, '
             f'{n["fat"]:.1f}/{n["saturates"]:.1f}g fat/sats., '
             f'{n["carbohydrates"]:.1f}/{n["sugars"]:.1f}g carbs/sugars, '
@@ -246,13 +237,6 @@ class Journal(models.Model):
             return abs(target - value) <= target * deviation
 
         n = self.nutrition()
-        print(self.date,    within_deviation(n['energy'], target.energy))
-        print(self.date,    within_deviation(n['fat'], target.fat))
-        print(self.date,    within_deviation(n['saturates'], target.saturates))
-        print(self.date,    within_deviation(n['carbohydrates'], target.carbohydrates))
-        print(self.date,    within_deviation(n['sugars'], target.sugars))
-        print(self.date,    within_deviation(n['protein'], target.protein))
-        print(self.date,    n['salt'] <= target.salt)
         return (
             within_deviation(n['energy'], target.energy) and
             within_deviation(n['fat'], target.fat) and
