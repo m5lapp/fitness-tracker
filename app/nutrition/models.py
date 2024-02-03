@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -210,24 +210,36 @@ class Journal(models.Model):
         )
     
     def nutrition(self):
-        energy = fat = sat = carbs = sugars = protein = salt = 0
-        for item in JournalItem.objects.filter(journal=self):
-            energy += (item.energy() or 0)
-            fat += (item.fat() or 0)
-            sat += (item.saturates() or 0)
-            carbs += (item.carbohydrates() or 0)
-            sugars += (item.sugars() or 0)
-            protein += (item.protein() or 0)
-            salt += (item.salt() or 0)
-        return {
-            'energy': None or energy,
-            'fat': None or fat,
-            'saturates': None or sat,
-            'carbohydrates': None or carbs,
-            'sugars': None or sugars,
-            'protein': None or protein,
-            'salt': None or salt,
-        }
+        # Doing this aggregation of each nutritional value for the journal entry
+        # in the database is 10x faster than doing it in the model.
+        query = '''
+          select
+                sum(ji.quantity / fi.unit_quantity * fi.energy) as energy,
+                sum(ji.quantity / fi.unit_quantity * fi.fat) as fat,
+                sum(ji.quantity / fi.unit_quantity * fi.saturates) as saturates,
+                sum(ji.quantity / fi.unit_quantity * fi.carbohydrates) as carbohydrates,
+                sum(ji.quantity / fi.unit_quantity * fi.sugars) as sugars,
+                sum(ji.quantity / fi.unit_quantity * fi.protein) as protein,
+                sum(ji.quantity / fi.unit_quantity * fi.salt) as salt
+            from nutrition_journal jo
+       left join nutrition_journalitem ji on jo.id = ji.journal_id
+      inner join nutrition_fooditem fi on fi.id = ji.food_item_id
+           where jo.id = %s
+        group by jo.id, jo.date
+        '''
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, [self.id,])
+            row = cursor.fetchone()
+            return {
+                'energy': row[0],
+                'fat': row[1],
+                'saturates': row[2],
+                'carbohydrates': row[3],
+                'sugars': row[4],
+                'protein': row[5],
+                'salt': row[6],
+            }
 
     def target_intake_met(self, target: TargetIntake, deviation: float=0.05) -> bool:
         def within_deviation(value, target) -> bool:
@@ -283,7 +295,7 @@ class JournalItem(models.Model):
     def __str__(self):
         return (
             f'{self.journal.date} | {self.TYPES[self.type]} | '
-            f'{self.food_item.name[:50]} ({self.energy()}kcal '
+            f'{self.food_item.name[:50]} ({self.energy():.0f}kcal '
             f'{self.fat():.1f}/{self.saturates():.1f}g fat/sats., '
             f'{self.carbohydrates():.1f}/{self.sugars():.1f}g carbs/sugars, '
             f'{self.protein():.1f}g protein, {self.salt():.2f}g salt)'
