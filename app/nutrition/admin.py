@@ -12,7 +12,7 @@ class FoodItemAdmin(admin.ModelAdmin):
     ]
     list_display_links = ["favourite", "name",]
     list_filter = ["category",]
-    search_fields = ["name", "subcategory", "brand", "range",]
+    search_fields = ["name", "category__name", "subcategory", "brand", "range",]
     ordering = [
         "-favourite", "category__name", "subcategory", "brand", "range", "name",
     ]
@@ -20,6 +20,7 @@ class FoodItemAdmin(admin.ModelAdmin):
 class JournalItemInline(admin.TabularInline):
     model = JournalItem
     extra = 1
+    autocomplete_fields = ["food_item",]
 
 class JournalAdmin(admin.ModelAdmin):
     inlines = [JournalItemInline,]
