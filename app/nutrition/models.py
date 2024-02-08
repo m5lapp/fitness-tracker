@@ -232,13 +232,13 @@ class Journal(models.Model):
             cursor.execute(query, [self.id,])
             row = cursor.fetchone()
             return {
-                'energy': row[0],
-                'fat': row[1],
-                'saturates': row[2],
-                'carbohydrates': row[3],
-                'sugars': row[4],
-                'protein': row[5],
-                'salt': row[6],
+                'energy': row[0] or 0,
+                'fat': row[1] or 0,
+                'saturates': row[2] or 0,
+                'carbohydrates': row[3] or 0,
+                'sugars': row[4] or 0,
+                'protein': row[5] or 0,
+                'salt': row[6] or 0,
             }
 
     def target_intake_met(self, target: TargetIntake, deviation: float=0.05) -> bool:
