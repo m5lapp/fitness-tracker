@@ -154,6 +154,10 @@ build/container/proxy:
 ## deploy: Deploy the application to Kubernetes with Helm
 .PHONY: deploy
 deploy:
-	helm upgrade -i fitness-tracker ./helm/fitness-tracker/ \
-       -f helm/custom-values.yaml \
-       --wait
+	helm repo add m5lapp https://m5lapp.github.io/helm-charts
+	helm repo update m5lapp
+	@touch custom-values.yaml
+	helm upgrade ${FT_APP_NAME} m5lapp/fitness-tracker \
+        --install \
+        --wait \
+        -f custom-values.yaml

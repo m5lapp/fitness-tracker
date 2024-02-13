@@ -41,28 +41,38 @@ You can then perform various tasks with the targets in the Makefile such as runn
     1. `make build/container/app`
 
 ### Deploy to Kubernetes
-A Helm chart is supplied in the `helm/` directory for deployment to a Kubernetes cluster. There are a number of optional infrastructure features that can be activated such as ingress and client certificates (mTLS) [using Traefik](https://github.com/m5lapp/k3s-fcos-oci/tree/main/docs) and automated database backups if Postgresql is used as the database.
+A Helm chart is available at <https://github.com/m5lapp/helm-charts/tree/main/charts/fitness-tracker> which can be installed as described below. There are a number of optional infrastructure features that can be activated such as ingress and client certificates (mTLS) [using Traefik](https://github.com/m5lapp/k3s-fcos-oci/tree/main/docs) and automated database backups if Postgresql is used as the database.
 
 1. Create the namespace, remove the annotation if you do not wish for the Pods within it to be meshed by Linkerd:
    ```bash
-   cat << EOF | kubectl apply -f -
+   kubectl apply -f - <<EOF
    apiVersion: v1
    kind: Namespace
    metadata:
-   name: fitness-tracker
-   annotations:
-     linkerd.io/inject: enabled
-   labels:
-     app: fitness-tracker
+     name: fitness-tracker
+     annotations:
+       linkerd.io/inject: enabled
+     labels:
+       app: fitness-tracker
    EOF
    ```
-1. Create a custom values file to override any of the values in the `helm/fitness-tracker/values.yaml` file. The path `helm/custom-values.yaml` is gitignored for this purpose if you wish to use it.
-1. Install the Helm chart; there is a `make deploy` Make target available, otherwise the command is:
-   ```sh
-   helm upgrade -i fitness-tracker ./helm/fitness-tracker/ \
-       -f helm/custom-values.yaml \
-       --wait
+1. Create a custom values file to override any of the values in the [Values.yaml file](https://github.com/m5lapp/helm-charts/blob/main/charts/fitness-tracker/values.yaml) file to fit your use-case.
+1. Install the Helm chart as follows using your custom values file:
+   ```bash
+   # Add the required Helm repository.
+   helm repo add m5lapp https://m5lapp.github.io/helm-charts
+
+   # Update your copy of the Helm repo if necessary.
+   helm repo update m5lapp
+
+   # Install/upgrade the fitness-tracker Helm chart.
+   helm upgrade fitness-tracker m5lapp/fitness-tracker \
+       --install \
+       --wait \
+       -f custom-values.yaml
    ```
+
+For convenience, there is also a make target available that will run all the commands in the last step. It will assume that there is a values file called `custom-values.yaml` in the root of this project (it will get created empty if it does not exist). This can be run with `make deploy`.
 
 ## Database Backup and Restoration
 There is a Kubernetes CronJob that will automatically do a pg_dump of the database at the given schedule. A backup can then be restored as follows:
