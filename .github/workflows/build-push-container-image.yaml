@@ -6,8 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_APP: ${{ github.repository }}
-  IMAGE_NAME_PROXY: ${{ github.repository }}-proxy
 
 jobs:
   build-and-push-image:
@@ -19,9 +17,9 @@ jobs:
       matrix:
         include:
         - context: ./app/
-          image: ${{ env.IMAGE_NAME_APP }}
+          image: ${{ github.repository }}
         - context: ./proxy/
-          image: ${{ env.IMAGE_NAME_PROXY }}
+          image: ${{ github.repository }}-proxy
 
     steps:
     # - name: Checkout repository
