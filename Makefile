@@ -1,4 +1,4 @@
-include .envrc
+-include .envrc
 
 FT_APP_NAME=fitness-tracker
 FT_CONTAINER_IMAGE_TAG=1.2.7
@@ -26,7 +26,6 @@ confirm:
 ## venv/activate: Activate (and create if required) a Python virtual environment
 .PHONY: venv/activate
 venv/activate:
-	. .envrc
 	test -d venv || python3 -m venv venv
 	. venv/bin/activate; \
 		pip install -r app/requirements.txt

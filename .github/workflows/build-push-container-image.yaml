@@ -45,6 +45,7 @@ jobs:
     - name: Collect static file for proxy
       run: |
         if test "${{ matrix.context }}" == "proxy/"; then
+          make venv/activate
           make collectstatic
         fi
 
