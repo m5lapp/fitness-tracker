@@ -17,8 +17,10 @@ jobs:
       matrix:
         include:
         - context: ./app/
+          file: Containerfile
           image: ${{ github.repository }}
         - context: ./proxy/
+          file: Containerfile
           image: ${{ github.repository }}-proxy
 
     steps:
@@ -44,6 +46,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ matrix.context }}
+        file: ${{ matrix.file }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
