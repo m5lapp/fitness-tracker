@@ -45,8 +45,8 @@ jobs:
     - name: Collect static file for proxy
       run: |
         if test "${{ matrix.context }}" == "proxy/"; then
-          FT_SECRET_KEY="fake" make venv/activate
-          make collectstatic
+          make venv/activate
+          FT_SECRET_KEY="fake" make collectstatic
         fi
 
     - name: Build and push app container image
