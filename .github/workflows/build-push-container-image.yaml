@@ -43,7 +43,10 @@ jobs:
           type=semver,pattern={{version}}
 
     - name: Collect static file for proxy
-      run: test "${{ matrix.context }}" == "proxy/" && make collectstatic
+      run: |
+        if test "${{ matrix.context }}" == "proxy/"; then
+          make collectstatic
+        fi
 
     - name: Build and push app container image
       uses: docker/build-push-action@v5
