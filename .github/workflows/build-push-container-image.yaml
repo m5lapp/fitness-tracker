@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         include:
-        - context: ./app/
-          file: Containerfile
+        - context: app/
+          file: app/Containerfile
           image: ${{ github.repository }}
-        - context: ./proxy/
-          file: Containerfile
+        - context: proxy/
+          file: proxy/Containerfile
           image: ${{ github.repository }}-proxy
 
     steps:
