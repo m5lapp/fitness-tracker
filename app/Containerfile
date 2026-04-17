@@ -1,4 +1,4 @@
-FROM docker.io/python:3.11-alpine3.18
+FROM docker.io/python:3.14-alpine3.23
 
 ARG USER=app
 
@@ -21,9 +21,10 @@ RUN apk update && \
 USER $USER
 
 RUN pip install --upgrade pip && \
-    pip install --upgrade setuptools \
+    pip install --upgrade setuptools && \
     pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8080
 
 CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:8080", "fitnesstracker.wsgi"]
+
